@@ -1,6 +1,7 @@
 from hash import HashTable
 from csv import reader
 import sys
+import pdb
 
 
 
@@ -10,7 +11,7 @@ class Phonebook:
 		#connect to permanent storage
 		self.create_flag = False
 		self.delimiter = '|'
-		self.storage = "permanent_data.py"
+		self.storage = "permanent_data.txt"
 		self.database = HashTable(5479)
 		#call function to read existing data into hash table
 		self._import_data()
@@ -24,11 +25,15 @@ class Phonebook:
 
 	def _import_data(self):
 		for row in self._read_lines():
-			name = row[0].split(self.delimiter)
-			number = row[-1].split(self.delimiter)
-			self.database[name] = number
+			if row.startswith("~"):
+				self.create()
+			else:
+				name = row.split(self.delimiter)[0]
+				number = row.split(self.delimiter)[-1]
+				self.database[name] = number
 
 	def add(self, name, number):
+		#print(self.database.hashkeys)
 		if name not in set(self.database.hashkeys):
 			self.database[name] = number
 		else:
@@ -64,29 +69,37 @@ class Phonebook:
 
 	def save(self):
 		with open(self.storage, 'w') as txt_file:
-			txt_file.write("#permanent storage file")
+			txt_file.write("#permanent storage file\n")
+			if self.create_flag:
+				txt_file.write("~CREATED\n")
 			for name in self.database.keys:
 				if name != None:
-					txt_file.write(name+"|"+self.database[name])
+					txt_file.write(name+"|"+self.database[name]+"\n")
 
 
 	def check_input_errors(self, args):
-		if len(args) == 2:
+		if len(args) == 1:
 			raise RuntimeError("Need more input")
 
 
 	def parse_arguments(self, args):
 		self.check_input_errors(args)
 		if self.create_flag:
-			if args[3] == "add":
-				self.add(args[4], args[5])
+			if args[1] == "add":
+				self.add(*args[2:4])
 			else:
-				self.args[3](args[4])
+				result = getattr(self, args[1])(args[2])
 		else:
-			raise RuntimeError("Phonebook does not exist")
+			if args[1] == 'create':
+				self.create()
+			else:
+				raise RuntimeError("Phonebook does not exist")
 		self.save()
+		return result
 
 if __name__ == '__main__':
-	args = sys.args[:]
+	args = sys.argv[:]
+	print(args)
 	userPhone = Phonebook()
-	userPhone.parse_arguments(args)
+	res = userPhone.parse_arguments(args)
+	print(res)

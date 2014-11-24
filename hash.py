@@ -1,6 +1,7 @@
 #Creates hash table for storing phone book information
 #names are keys and phone numbers are values
 import pdb
+#python -m cProfile -sort cumtime programname.py
 
 class HashTable(object):
 
